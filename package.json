@@ -8,9 +8,10 @@
  "main": "index.js",
  "author": "Chris Coyne <ccoyne77@gmail.com>",
  "dependencies": {
+  "affine" 	  		: "0.0.2"
  },
  "devDependencies": {
-  "coffee-script" :  "*"
+  "coffee-script" 	: "*"
  },
  "repository": {
   "type": "git",

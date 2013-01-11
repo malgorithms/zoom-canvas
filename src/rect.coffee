@@ -1,12 +1,11 @@
+{vec} = require './vec'
 
 class rect
-  constructor: ({ll, ur})-> 
-    @ll = ll or null # lower left vec
-    @ur = ur or null # upper right vec
+  constructor: (ll, ur)->
+    @ll = ll or new vec(0,0)# lower left vec
+    @ur = ur or new vec(0,0)# upper right vec
+
   copy: ->
-    r = new boundingRect {
-      ll: @ll.copy()
-      lr: @lr.copy()
-    }
+    r = new boundingRect @ll.copy(), @lr.copy()
 
 exports.rect = rect
