@@ -8,7 +8,7 @@
  "main": "index.js",
  "author": "Chris Coyne <ccoyne77@gmail.com>",
  "dependencies": {
-  "affine" 	  		: "*"
+  "affine" 	  		: "0.0.3"
  },
  "devDependencies": {
   "coffee-script" 	: "*",
