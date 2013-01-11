@@ -1,6 +1,7 @@
 {spawn, exec}          = require 'child_process'
 fs                     = require 'fs'
 path                   = require 'path'
+stitch                 = require 'stitch'
 
 task 'build', 'build the whole jam', (cb) ->  
   console.log "Building"
@@ -8,9 +9,18 @@ task 'build', 'build the whole jam', (cb) ->
   files = ('src/' + file for file in files when file.match(/\.coffee$/))
   clearLibJs ->
     runCoffee ['-c', '-o', 'lib/'].concat(files), ->
-      runCoffee ['-c', 'index.coffee'], ->
-        console.log "Done building."
-        cb() if typeof cb is 'function'
+      stitchIt ->
+        runCoffee ['-c', 'index.coffee'], ->
+          console.log "Done building."
+          cb() if typeof cb is 'function'
+
+stitchIt = (cb) ->
+  s = stitch.createPackage { paths: ['lib', 'node_modules'] }
+  s.compile (err, source) ->
+    fs.writeFile 'zoom-canvas.js', source, (err) ->
+      if err then throw err
+      console.log "Stitched."
+      cb()
 
 runCoffee = (args, cb) ->
   proc =  spawn 'coffee', args
