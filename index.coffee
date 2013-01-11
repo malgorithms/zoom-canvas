@@ -1,1 +1,1 @@
-exports.zoomCanvas = require('./lib/zoomCanvas').zoomCanvas
+exports.zoomCanvas = require('./lib/zoom-canvas').zoomCanvas
