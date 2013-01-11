@@ -49,6 +49,9 @@ class zoomCanvas
     ###
     @affine.setCtxTransform ctx
 
+  applyToCtx: (ctx) ->
+    @affine.applyToCtx ctx
+
   step: ->
 
     @lastStep = @lastStep or Date.now()

@@ -162,6 +162,10 @@
       return this.affine.setCtxTransform(ctx);
     };
 
+    zoomCanvas.prototype.applyToCtx = function(ctx) {
+      return this.affine.applyToCtx(ctx);
+    };
+
     zoomCanvas.prototype.step = function() {
       var act, dt, fx0, fx1, fy0, fy1, tar, unit_h, unit_w, x_scale, y_scale, _ref;
       this.lastStep = this.lastStep || Date.now();
