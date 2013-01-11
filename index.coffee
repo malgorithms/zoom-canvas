@@ -1,0 +1,1 @@
+exports.zoomCanvas = require('./lib/zoomCanvas').zoomCanvas

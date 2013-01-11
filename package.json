@@ -1,0 +1,25 @@
+{
+ "name": "zoom-canvas",
+ "description": "A module/lib for keeping objects in a canvas",
+ "version": "0.0.1",
+ "directories": {
+  "lib": "./lib"
+ },
+ "main": "index.js",
+ "author": "Chris Coyne <ccoyne77@gmail.com>",
+ "dependencies": {
+ },
+ "devDependencies": {
+  "coffee-script" :  "*"
+ },
+ "repository": {
+  "type": "git",
+  "url": "http://github.com/malgorithms/zoom-canvas"
+ },
+ "licenses": [
+  {
+   "type": "MIT",
+   "url": "http://github.com/malgorithms/zoom-canvas/raw/master/LICENSE"
+  }
+ ]
+}
