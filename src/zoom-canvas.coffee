@@ -41,6 +41,14 @@ class zoomCanvas
     @bounds.target.ur.x = xmax
     @bounds.target.ur.y = ymax
 
+  setCtxTransform: (ctx) ->
+    ###
+    given the context of an html5 canvas,
+    this applies the affine to it, so you can
+    start drawing shapes in word coordinates
+    ###
+    @affine.setCtxTransform ctx
+
   step: ->
 
     @lastStep = @lastStep or Date.now()
@@ -74,6 +82,9 @@ class zoomCanvas
     @drawScale = @fill * Math.min x_scale, y_scale
 
     @_updateAffine()
+
+  worldPairToCanvasPair: (p) ->
+    @affine.transformPair p[0], p[1]
 
   instantZoom: ->
     # skips spring step

@@ -15,8 +15,11 @@ task 'build', 'build the whole jam', (cb) ->
           cb() if typeof cb is 'function'
 
 stitchIt = (cb) ->
-  s = stitch.createPackage { paths: ['lib', 'node_modules'] }
+  s = stitch.createPackage { paths: ['./lib', './node_modules'] }
   s.compile (err, source) ->
+    if err
+      console.log err
+      process.exit 1
     fs.writeFile 'zoom-canvas.js', source, (err) ->
       if err then throw err
       console.log "Stitched."
