@@ -63,7 +63,7 @@
 
     rect.prototype.copy = function() {
       var r;
-      return r = new rect(this.ll.copy(), this.lr.copy());
+      return r = new rect(this.ll.copy(), this.ur.copy());
     };
 
     return rect;

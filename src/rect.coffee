@@ -6,6 +6,6 @@ class rect
     @ur = ur or new vec(0,0)# upper right vec
 
   copy: ->
-    r = new rect @ll.copy(), @lr.copy()
+    r = new rect @ll.copy(), @ur.copy()
 
 exports.rect = rect
