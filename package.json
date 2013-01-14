@@ -1,7 +1,7 @@
 {
  "name": "zoom-canvas",
  "description": "A module/lib for keeping objects in a canvas",
- "version": "0.0.5",
+ "version": "0.0.6",
  "directories": {
   "lib": "./lib"
  },
