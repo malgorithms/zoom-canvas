@@ -10,6 +10,7 @@ class zoomCanvas
         fill:          fraction of canvas to keep filled; 0.8 means 20% margins
         spring_k:      spring constant for zoom snapping
         spring_damp:   spring dampeining for zoom snapping
+        step_dt_ms:    ms per step calculation
         ---
         canvas:        an actual html5 canvas to follow, so width, height updated automatically
           - or -
@@ -22,6 +23,7 @@ class zoomCanvas
     @canvas        = options.canvas        or null
     @width         = options.canvas_width  or @canvas.width
     @height        = options.canvas_height or @canvas.height
+    @step_dt       = if options.step_dt_ms? then (options.step_dt_ms/1000) else 0.01
     @fill          = options.fill          or 1.0
     @spring_k      = if options.spring_k? then options.spring_k else 1.0
     @spring_damp   = if options.spring_damp? then options.spring_damp else 1.0
@@ -52,37 +54,57 @@ class zoomCanvas
   applyToCtx: (ctx) ->
     @affine.applyToCtx ctx
 
-  step: ->
+  step: (gametime_ms) ->
+    ###
+    pass it your game time, in milliseconds; 
+    so that it is smooth jumping, even when a game pauses.
+    if you don't care about that or your game is unpausable,
+    pass it Date.now()
+    ###
 
-    @lastStep = @lastStep or Date.now()
-    [dt, @lastStep] = [(Date.now() - @lastStep)/1000, Date.now()]
+    t             = gametime_ms / 1000
+    @lastStep     = @lastStep or t
+    safety_check  = Date.now()
+    count         = 0
+    done          = false
+    while not done
+      count++
+      dt         = @step_dt
+      if @lastStep < t
+        @lastStep += dt
+      else
+        done = true
 
-    tar = @bounds.target
-    act = @bounds.actual
-    fx0 = (tar.ll.x - act.ll.x) * @spring_k - @bounds.vel.ll.x * @spring_damp
-    fy0 = (tar.ll.y - act.ll.y) * @spring_k - @bounds.vel.ll.y * @spring_damp
-    fx1 = (tar.ur.x - act.ur.x) * @spring_k - @bounds.vel.ur.x * @spring_damp
-    fy1 = (tar.ur.y - act.ur.y) * @spring_k - @bounds.vel.ur.y * @spring_damp
+      tar = @bounds.target
+      act = @bounds.actual
+      fx0 = (tar.ll.x - act.ll.x) * @spring_k - @bounds.vel.ll.x * @spring_damp
+      fy0 = (tar.ll.y - act.ll.y) * @spring_k - @bounds.vel.ll.y * @spring_damp
+      fx1 = (tar.ur.x - act.ur.x) * @spring_k - @bounds.vel.ur.x * @spring_damp
+      fy1 = (tar.ur.y - act.ur.y) * @spring_k - @bounds.vel.ur.y * @spring_damp
 
-    @bounds.vel.ll.x += fx0 * dt
-    @bounds.vel.ll.y += fy0 * dt
-    @bounds.vel.ur.x += fx1 * dt
-    @bounds.vel.ur.y += fy1 * dt
+      @bounds.vel.ll.x += fx0 * dt
+      @bounds.vel.ll.y += fy0 * dt
+      @bounds.vel.ur.x += fx1 * dt
+      @bounds.vel.ur.y += fy1 * dt
 
-    act.ll.x += @bounds.vel.ll.x * dt
-    act.ll.y += @bounds.vel.ll.y * dt
-    act.ur.x += @bounds.vel.ur.x * dt
-    act.ur.y += @bounds.vel.ur.y * dt
+      act.ll.x += @bounds.vel.ll.x * dt
+      act.ll.y += @bounds.vel.ll.y * dt
+      act.ur.x += @bounds.vel.ur.x * dt
+      act.ur.y += @bounds.vel.ur.y * dt
 
-    if @canvas
-      @width  = @canvas.width
-      @height = @canvas.height
+      if @canvas
+        @width  = @canvas.width
+        @height = @canvas.height
 
-    unit_w  = act.ur.x - act.ll.x
-    unit_h  = act.ur.y - act.ll.y
-    x_scale = @width  / unit_w
-    y_scale = @height / unit_h
-    @drawScale = @fill * Math.min x_scale, y_scale
+      unit_w  = act.ur.x - act.ll.x
+      unit_h  = act.ur.y - act.ll.y
+      x_scale = @width  / unit_w
+      y_scale = @height / unit_h
+      @drawScale = @fill * Math.min x_scale, y_scale
+      if (Date.now() - safety_check) > 10 # never let this take more than 10ms
+        console.log "Bypassing smoothness for speed reasons after #{count} steps"
+        @instantZoom()
+        break
 
     @_updateAffine()
 
@@ -94,6 +116,8 @@ class zoomCanvas
     @bounds.vel.ll.zero()
     @bounds.vel.ur.zero()
     @bounds.actual = @bounds.target.copy()
+    @lastStep = null
+    @_updateAffine()
 
   _updateAffine: ->
     @affine = new affine.affine2d()
