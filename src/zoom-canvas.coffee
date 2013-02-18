@@ -43,6 +43,8 @@ class zoomCanvas
     @bounds.target.ur.x = xmax
     @bounds.target.ur.y = ymax
 
+  getPosRotScale: -> @affine.toPosRotScale()
+
   setCtxTransform: (ctx) ->
     ###
     given the context of an html5 canvas,
