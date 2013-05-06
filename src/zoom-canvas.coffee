@@ -29,6 +29,7 @@ class zoomCanvas
     @spring_damp   = if options.spring_damp? then options.spring_damp else 1.0
     @drawScale     = null
     @affine        = new affine.affine2d()
+    @inv_affine    = new affine.affine2d()
     @lastStep      = null
     @bounds        =
       target: new rect()
@@ -44,6 +45,7 @@ class zoomCanvas
     @bounds.target.ur.y = ymax
 
   getPosRotScale: -> @affine.toPosRotScale()
+  getPosRotScaleInv: -> @inv_affine.toPosRotScale()
 
   setCtxTransform: (ctx) ->
     ###
@@ -113,6 +115,9 @@ class zoomCanvas
   worldPairToCanvasPair: (p) ->
     @affine.transformPair p[0], p[1]
 
+  canvasPairToWorldPair: (p) ->
+    @inv_affine.transformPair p[0], p[1]
+
   instantZoom: ->
     # skips spring step
     @bounds.vel.ll.zero()
@@ -122,12 +127,21 @@ class zoomCanvas
     @_updateAffine()
 
   _updateAffine: ->
+
+    ctrx = (@bounds.actual.ll.x + @bounds.actual.ur.x) / 2
+    ctry = (@bounds.actual.ll.y + @bounds.actual.ur.y) / 2
+
+    # affine
     @affine = new affine.affine2d()
     @affine.translate @width/2, @height/2
     @affine.scale     @drawScale, -@drawScale
-    ctrx = (@bounds.actual.ll.x + @bounds.actual.ur.x) / 2
-    ctry = (@bounds.actual.ll.y + @bounds.actual.ur.y) / 2
     @affine.translate -ctrx, -ctry
+
+    # inverse
+    @inv_affine = new affine.affine2d()
+    @inv_affine.translate ctrx, ctry
+    @inv_affine.scale (1 / @drawScale), -(1 / @drawScale)
+    @inv_affine.translate -@width/2, -@height/2
 
 
 exports.zoomCanvas = zoomCanvas
