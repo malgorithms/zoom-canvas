@@ -1,6 +1,7 @@
 {spawn, exec} = require 'child_process'
 fs            = require 'fs'
 path          = require 'path'
+stitch        = require 'stitch'
 browserify    = require 'browserify'
 icsify        = require 'icsify'
 uglify        = require 'uglify-js'

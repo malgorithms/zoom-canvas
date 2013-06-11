@@ -1,1 +1,1 @@
-exports.zoomCanvas = require('./src/zoom-canvas').zoomCanvas;
+exports.zoomCanvas = require('./src/zoom-canvas.iced').zoomCanvas;
