@@ -1,7 +1,6 @@
 {spawn, exec} = require 'child_process'
 fs            = require 'fs'
 path          = require 'path'
-stitch        = require 'stitch'
 browserify    = require 'browserify'
 icsify        = require 'icsify'
 uglify        = require 'uglify-js'
@@ -10,9 +9,6 @@ through       = require 'through'
 # -------------
 
 task 'build', 'build the whole jam', (cb) ->  
-
-  files = fs.readdirSync 'src'
-  files = ('src/' + file for file in files when file.match(/\.(coffee|iced)$/))
 
   await 
     browserify_it {
