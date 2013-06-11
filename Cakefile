@@ -16,8 +16,8 @@ task 'build', 'build the whole jam', (cb) ->
 
   await 
     browserify_it {
+      expose:       'zoomCanvas' # sets require('zoomCanvas') in browser same as require('./src/browser-main.iced')
       p:            './src/browser-main.iced'
-      expose:       'zoomCanvas'              # require('zoomCanvas') in browser == require('./src/browser-main.iced')
       out:          './zoom-canvas.js'
       min:          './zoom-canvas-min.js'
       cb:           defer()
@@ -40,17 +40,18 @@ browserify_it = ({p, expose, out, min, cb}) ->
   await fs.writeFile min, src, defer err # cover the min for a second, just so we can use it
   if err then throw err
 
-  console.log "browserify #{out}: success (#{src.length} chars)"
+  console.log "generating #{out}: success (#{src.length} chars)"
   mcode = uglify.minify(out).code
   await fs.writeFile min, mcode, defer err
   if err then throw err
 
-  console.log "browserify #{min}: success (#{mcode.length} chars)"
+  console.log "generating #{min}: success (#{mcode.length} chars)"
   cb()
 
 # -------------
 
 browserify_transform = (file) ->
+  console.log "...browserify transforming #{file}"
   if file.match /\.(coffee|iced)$/
     icsify file
   else if file.match /\.js$/

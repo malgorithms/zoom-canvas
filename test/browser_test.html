@@ -3,27 +3,35 @@
     <script src="../zoom-canvas.js"></script>
     <script>
       var zoomCanvas  = require('zoomCanvas').zoomCanvas;
+      var ezCanvas    = require('zoomCanvas').ezCanvas;
     </script>
   </head>
   <body>
-    <canvas id="test_canvas" width="150" height="50"></canvas>
+    <canvas id="test_canvas" width="600" height="400" style="border:1px solid #ddd;"></canvas>
     <div    id="debug"></div>
     <script>
-      var zc = new zoomCanvas({
-        fill:           0.8,
-        spring_k:       50,
-        spring_damp:    10,
-        canvas:         document.getElementById("test_canvas")
+      var ezc = new ezCanvas({
+          fill:           0.8,
+          spring_k:       500,
+          spring_damp:    100,
+          canvas:         document.getElementById("test_canvas"),
+          step_dt_ms:     10
       })
-
-      zc.setObjectBounds(-1, -1, 1, 1);
-
       loop = function() {
-        zc.step();
-        setTimeout(loop, 10);
-        document.getElementById("debug").innerHTML = JSON.stringify(zc.affine.toPosRotScale());
-      }
 
+        ezc.clear();
+        for (var i = 0; i < 40; i++) {
+          ezc.line({
+            start:        [i+i*Math.sin(i*Date.now()/100000), 0],
+            end:          [0, 10-i-i*Math.sin(i*Date.now()/80000)],
+            color:        "red",
+            thickness:    0.01*(i+1)
+          });
+        }
+        ezc.paint();
+
+        setTimeout(loop, 10);
+      }
       loop();
     </script>
   </body>

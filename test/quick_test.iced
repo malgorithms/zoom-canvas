@@ -12,6 +12,7 @@ zc = new zoomCanvas {
   spring_damp:    5
   canvas_width:   400
   canvas_height:  400
+  step_dt_ms:     10
 }
 
 zc.setObjectBounds -1, -1, 1, 1

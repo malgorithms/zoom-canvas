@@ -6,10 +6,133 @@ module.exports=require('s4nl1i');
 
   exports.zoomCanvas = require('./zoom-canvas.iced').zoomCanvas;
 
+  exports.ezCanvas = require('./ez-canvas.iced').ezCanvas;
+
 }).call(this);
 
 
-},{"./zoom-canvas.iced":1}],2:[function(require,module,exports){
+},{"./zoom-canvas.iced":1,"./ez-canvas.iced":2}],2:[function(require,module,exports){
+(function() {
+  var ezCanvas, qtypes, rect, vec, zoomCanvas;
+
+
+
+  zoomCanvas = require('./zoom-canvas.iced').zoomCanvas;
+
+  rect = require('./rect.iced').rect;
+
+  vec = require('./vec.iced').vec;
+
+  qtypes = {
+    LINE: 10
+  };
+
+  ezCanvas = (function() {
+    function ezCanvas(options) {
+      /*
+        options:
+          fill:          fraction of canvas to keep filled; 0.8 means 20% margins
+          spring_k:      spring constant for zoom snapping
+          spring_damp:   spring dampening for zoom snapping
+          step_dt_ms:    ms per step calculation
+          canvas:        an actual html5 canvas to follow, so width, height updated automatically
+      */
+
+      this.zc = new zoomCanvas(options);
+      this.bounds = null;
+      this.canvas = options.canvas;
+      this.queue = [];
+      this.ctx = this.canvas.getContext("2d");
+    }
+
+    ezCanvas.prototype.line = function(o) {
+      return this.queue.push([qtypes.LINE, o]);
+    };
+
+    ezCanvas.prototype.clear = function() {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.bounds = null;
+      return this.queue = [];
+    };
+
+    ezCanvas.prototype.paint = function() {
+      var q, _i, _len, _ref;
+      this.recalc_bounds();
+      this.zc.setObjectBounds(this.bounds.ll.x, this.bounds.ll.y, this.bounds.ur.x, this.bounds.ur.y);
+      this.zc.step(Date.now());
+      _ref = this.queue;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        q = _ref[_i];
+        this.paint_queued_item(q);
+      }
+      return this.queue = [];
+    };
+
+    ezCanvas.prototype.paint_queued_item = function(q_item) {
+      var o, qt;
+      qt = q_item[0];
+      o = q_item[1];
+      switch (qt) {
+        case qtypes.LINE:
+          return this.paint_queued_line(o);
+        default:
+          throw new Error("Dunno how to draw " + qt);
+      }
+    };
+
+    ezCanvas.prototype.paint_queued_line = function(o) {
+      this.ctx.beginPath();
+      this.ctx.save();
+      this.zc.applyToCtx(this.ctx);
+      if (o.thickness != null) {
+        this.ctx.lineWidth = o.thickness;
+      }
+      this.ctx.moveTo(o.start[0], o.start[1]);
+      this.ctx.lineTo(o.end[0], o.end[1]);
+      this.ctx.stroke();
+      return this.ctx.restore();
+    };
+
+    ezCanvas.prototype.recalc_bounds = function() {
+      var q, rects;
+      rects = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this.queue;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          q = _ref[_i];
+          _results.push(this.get_q_bounds(q));
+        }
+        return _results;
+      }).call(this);
+      if (this.bounds != null) {
+        rects.push(this.bounds);
+      }
+      return this.bounds = rect.bounding_rects(rects);
+    };
+
+    ezCanvas.prototype.get_q_bounds = function(q_item) {
+      var o, qt;
+      qt = q_item[0];
+      o = q_item[1];
+      switch (qt) {
+        case qtypes.LINE:
+          return rect.bounding_vecs([new vec(o.start[0], o.start[1]), new vec(o.end[0], o.end[1])]);
+        default:
+          throw new Error("Unknown q type: " + qt);
+      }
+    };
+
+    return ezCanvas;
+
+  })();
+
+  exports.ezCanvas = ezCanvas;
+
+}).call(this);
+
+
+},{"./zoom-canvas.iced":1,"./rect.iced":3,"./vec.iced":4}],4:[function(require,module,exports){
 (function() {
   var vec;
 
@@ -57,6 +180,53 @@ module.exports=require('s4nl1i');
       return r = new rect(this.ll.copy(), this.ur.copy());
     };
 
+    rect.bounding_vecs = function(vec_array) {
+      var i, res, v, _i, _len;
+      res = new rect();
+      for (i = _i = 0, _len = vec_array.length; _i < _len; i = ++_i) {
+        v = vec_array[i];
+        if ((i === 0) || v.x < res.ll.x) {
+          res.ll.x = v.x;
+        }
+        if ((i === 0) || v.x > res.ur.x) {
+          res.ur.x = v.x;
+        }
+        if ((i === 0) || v.y < res.ll.y) {
+          res.ll.y = v.y;
+        }
+        if ((i === 0) || v.y > res.ur.x) {
+          res.ur.y = v.y;
+        }
+      }
+      return res;
+    };
+
+    rect.bounding_rects = function(rects_array) {
+      var r, res, _i, _len, _ref;
+      if (!rects_array.length) {
+        return new rect();
+      } else {
+        res = rects_array[0].copy();
+        _ref = rects_array.slice(1);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          r = _ref[_i];
+          if (r.ll.x < res.ll.x) {
+            res.ll.x = r.ll.x;
+          }
+          if (r.ur.x > res.ur.x) {
+            res.ur.x = r.ur.x;
+          }
+          if (r.ll.y < res.ll.y) {
+            res.ll.y = r.ll.y;
+          }
+          if (r.ur.y > res.ur.y) {
+            res.ur.y = r.ur.y;
+          }
+        }
+        return res;
+      }
+    };
+
     return rect;
 
   })();
@@ -66,7 +236,7 @@ module.exports=require('s4nl1i');
 }).call(this);
 
 
-},{"./vec.iced":2}],1:[function(require,module,exports){
+},{"./vec.iced":4}],1:[function(require,module,exports){
 (function() {
   var affine, rect, vec, zoomCanvas;
 
@@ -240,7 +410,7 @@ module.exports=require('s4nl1i');
 }).call(this);
 
 
-},{"./vec.iced":2,"./rect.iced":3,"affine":4}],4:[function(require,module,exports){
+},{"./vec.iced":4,"./rect.iced":3,"affine":5}],5:[function(require,module,exports){
 // Generated by CoffeeScript 1.3.3
 (function() {
 
@@ -250,7 +420,7 @@ module.exports=require('s4nl1i');
 
 }).call(this);
 
-},{"./lib/affine":5,"./lib/polygon":6}],5:[function(require,module,exports){
+},{"./lib/affine":6,"./lib/polygon":7}],6:[function(require,module,exports){
 // Generated by CoffeeScript 1.3.3
 (function() {
   var affine2d, flipX, flipY, posRotScale, reflection, reflectionUnit, rotation, scaling, translation,
@@ -609,7 +779,7 @@ module.exports=require('s4nl1i');
 
 }).call(this);
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 // Generated by CoffeeScript 1.3.3
 (function() {
   var affine, polygon;
@@ -711,5 +881,5 @@ module.exports=require('s4nl1i');
 
 }).call(this);
 
-},{"./affine":5}]},{},[])
+},{"./affine":6}]},{},[])
 ;
