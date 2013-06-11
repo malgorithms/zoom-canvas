@@ -1,40 +1,67 @@
-{spawn, exec}          = require 'child_process'
-fs                     = require 'fs'
-path                   = require 'path'
-stitch                 = require 'stitch'
+{spawn, exec} = require 'child_process'
+fs            = require 'fs'
+path          = require 'path'
+stitch        = require 'stitch'
+browserify    = require 'browserify'
+icsify        = require 'icsify'
+uglify        = require 'uglify-js'
+through       = require 'through'
+
+# -------------
 
 task 'build', 'build the whole jam', (cb) ->  
-  console.log "Building"
+
   files = fs.readdirSync 'src'
-  files = ('src/' + file for file in files when file.match(/\.coffee$/))
-  clearLibJs ->
-    runCoffee ['-c', '-o', 'lib/'].concat(files), ->
-      stitchIt ->
-        runCoffee ['-c', 'index.coffee'], ->
-          console.log "Done building."
-          cb() if typeof cb is 'function'
+  files = ('src/' + file for file in files when file.match(/\.(coffee|iced)$/))
 
-stitchIt = (cb) ->
-  s = stitch.createPackage { paths: ['./lib', './node_modules'] }
-  s.compile (err, source) ->
-    if err
-      console.log err
-      process.exit 1
-    fs.writeFile 'zoom-canvas.js', source, (err) ->
-      if err then throw err
-      console.log "Stitched."
-      cb()
+  await 
+    browserify_it {
+      p:            './src/browser-main.iced'
+      expose:       'zoomCanvas'              # require('zoomCanvas') in browser == require('./src/browser-main.iced')
+      out:          './zoom-canvas.js'
+      min:          './zoom-canvas-min.js'
+      cb:           defer()
+    }  
 
-runCoffee = (args, cb) ->
-  proc =  spawn 'coffee', args
-  console.log args
-  proc.stderr.on 'data', (buffer) -> console.log buffer.toString()
-  proc.on        'exit', (status) ->
-    process.exit(1) if status isnt 0
-    cb() if typeof cb is 'function'
+# -------------
 
-clearLibJs = (cb) ->
-  files = fs.readdirSync 'lib'
-  files = ("lib/#{file}" for file in files when file.match(/\.js$/))
-  fs.unlinkSync f for f in files
+browserify_it = ({p, expose, out, min, cb}) ->
+  b = browserify()
+  b.transform browserify_transform
+
+  b.require p, {expose}
+
+  await b.bundle {}, defer err, src
+  if err then throw err
+
+  await fs.writeFile out, src, defer err
+  if err then throw err  
+
+  await fs.writeFile min, src, defer err # cover the min for a second, just so we can use it
+  if err then throw err
+
+  console.log "browserify #{out}: success (#{src.length} chars)"
+  mcode = uglify.minify(out).code
+  await fs.writeFile min, mcode, defer err
+  if err then throw err
+
+  console.log "browserify #{min}: success (#{mcode.length} chars)"
   cb()
+
+# -------------
+
+browserify_transform = (file) ->
+  if file.match /\.(coffee|iced)$/
+    icsify file
+  else if file.match /\.js$/
+    through file
+    # just pass it through using through
+    data  = ''
+    write = (buf) -> data += buf
+    end   = ->
+      this.queue data
+      this.queue null
+    return through write, end
+  else
+    throw new Error "Don't know how to browserify (#{file})"  
+

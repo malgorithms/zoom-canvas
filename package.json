@@ -1,18 +1,21 @@
 {
  "name": "zoom-canvas",
  "description": "A module/lib for keeping objects in a canvas",
- "version": "0.0.9",
+ "version": "0.1.0",
  "directories": {
   "lib": "./lib"
  },
  "main": "index.js",
  "author": "Chris Coyne <ccoyne77@gmail.com>",
  "dependencies": {
-  "affine" 	  		: "*"
+  "affine"        : "*"
  },
  "devDependencies": {
-  "coffee-script" 	: "*",
-  "stitch"			: "*"
+  "iced-coffee-script"  : "*",
+  "browserify"          : "*",
+  "icsify"              : "*",
+  "uglify-js"           : "*",
+  "through"             : "*"
  },
  "repository": {
   "type": "git",
