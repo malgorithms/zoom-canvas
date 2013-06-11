@@ -6,6 +6,7 @@ browserify    = require 'browserify'
 icsify        = require 'icsify'
 uglify        = require 'uglify-js'
 through       = require 'through'
+stitch        = require 'stitch'
 
 # -------------
 
@@ -18,17 +19,22 @@ task 'build', 'build the whole jam', (cb) ->
       out:          './zoom-canvas.js'
       min:          './zoom-canvas-min.js'
       cb:           defer()
-    }  
+    }
 
 # -------------
 
-browserify_it = ({p, expose, out, min, cb}) ->
+# -------------
+
+browserify_it = ({p, expose, out, min, bundle_opts, cb}) ->
   b = browserify()
   b.transform browserify_transform
 
-  b.require p, {expose}
+  if expose?
+    b.require p, {expose}
+  else
+    b.require p
 
-  await b.bundle {}, defer err, src
+  await b.bundle (bundle_opts or {}), defer err, src
   if err then throw err
 
   await fs.writeFile out, src, defer err

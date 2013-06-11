@@ -8,11 +8,12 @@
  "main": "index.js",
  "author": "Chris Coyne <ccoyne77@gmail.com>",
  "dependencies": {
-  "iced-coffee-script"  : "*",
   "affine"              : "*"
  },
  "devDependencies": {
+  "iced-coffee-script"  : "*",
   "browserify"          : "*",
+  "stitch"              : "*",
   "icsify"              : "*",
   "uglify-js"           : "*",
   "through"             : "*"
