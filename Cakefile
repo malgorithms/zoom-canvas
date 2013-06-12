@@ -1,7 +1,6 @@
 {spawn, exec} = require 'child_process'
 fs            = require 'fs'
 path          = require 'path'
-stitch        = require 'stitch'
 browserify    = require 'browserify'
 icsify        = require 'icsify'
 uglify        = require 'uglify-js'
@@ -11,14 +10,51 @@ through       = require 'through'
 
 task 'build', 'build the whole jam', (cb) ->  
 
+  await clear_dir_js  'lib/', defer()
+  await ice_a_dir     'src/', 'lib/', defer()
+  await ice_a_file    './index.iced', defer()
+  
   await 
     browserify_it {
       expose:       'zoomCanvas' # sets require('zoomCanvas') in browser same as require('./src/browser-main.iced')
-      p:            './src/browser-main.iced'
+      p:            './lib/browser-main.js'
       out:          './zoom-canvas.js'
       min:          './zoom-canvas-min.js'
       cb:           defer()
-    }  
+    }
+
+# =============================================================================
+
+clear_dir_js = (dir, cb) ->
+  console.log "Clearing .js from directory #{dir}"
+  fs.unlinkSync "#{dir}/#{f}" for f in fs.readdirSync dir when f.match /\.js$/
+  cb()
+
+# -------------
+
+ice_a_file = (src, cb) ->
+  console.log "Icing #{src}"
+  await run_iced ['-I', 'inline', '-c', src], defer()
+  cb()
+
+# -------------
+
+ice_a_dir = (src, dest, cb) ->
+  console.log "Icing #{src} -> #{dest}"
+  files = fs.readdirSync src
+  files = ("#{src}/#{f}" for f in files when f.match /\.(coffee|iced)$/)
+  await run_iced ['-I', 'inline', '-c', '-o', "#{dest}/"].concat(files), defer()
+  cb()
+
+# -------------
+
+run_iced = (args, cb) ->
+  proc =  spawn 'iced', args
+  console.log args
+  proc.stderr.on 'data', (buffer) -> console.log buffer.toString()
+  proc.on        'exit', (status) ->
+    process.exit(1) if status != 0
+    cb() if typeof cb is 'function'  
 
 # -------------
 

@@ -1,4 +1,4 @@
-{vec} = require './vec.iced'
+{vec} = require './vec'
 
 class rect
   constructor: (ll, ur)->

@@ -1,6 +1,6 @@
-{zoomCanvas}      = require './zoom-canvas.iced'
-{rect}            = require './rect.iced'
-{vec}             = require './vec.iced'
+{zoomCanvas}      = require './zoom-canvas'
+{rect}            = require './rect'
+{vec}             = require './vec'
 
 
 qtypes = 

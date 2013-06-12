@@ -1,5 +1,5 @@
-{vec}     = require './vec.iced'
-{rect}    = require './rect.iced'
+{vec}     = require './vec'
+{rect}    = require './rect'
 {affine}  = require 'affine'
 
 class zoomCanvas
