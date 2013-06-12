@@ -6,6 +6,7 @@ icsify        = require 'icsify'
 uglify        = require 'uglify-js'
 through       = require 'through'
 stitch        = require 'stitch'
+{make_esc}    = require 'iced-error'
 
 # -------------
 
@@ -21,8 +22,9 @@ task 'build', 'build the whole jam', (cb) ->
       p:            './lib/browser-main.js'
       out:          './zoom-canvas.js'
       min:          './zoom-canvas-min.js'
-      cb:           defer()
+      cb:           defer err
     }
+  throw err if err?
 
 # =============================================================================
 
@@ -59,7 +61,16 @@ run_iced = (args, cb) ->
 
 # -------------
 
+run_bundle = (b, bundle_opts, cb) ->
+  await b.bundle bundle_opts, defer was_err, src
+  err = if was_err then new Error "bundler failed"
+  else null
+  cb err, src
+
+# -------------
+
 browserify_it = ({p, expose, out, min, bundle_opts, cb}) ->
+  esc = make_esc cb, "browserify_it"
   b = browserify()
   b.transform browserify_transform
 
@@ -68,22 +79,14 @@ browserify_it = ({p, expose, out, min, bundle_opts, cb}) ->
   else
     b.require p
 
-  await b.bundle (bundle_opts or {}), defer err, src
-  if err then throw err
-
-  await fs.writeFile out, src, defer err
-  if err then throw err  
-
-  await fs.writeFile min, src, defer err # cover the min for a second, just so we can use it
-  if err then throw err
-
+  await run_bundle b, (bundle_opts or {}), esc defer src
+  await fs.writeFile out, src, esc defer()
+  await fs.writeFile min, src, esc defer() # cover the min for a second, just so we can use it
   console.log "generating #{out}: success (#{src.length} chars)"
   mcode = uglify.minify(out).code
-  await fs.writeFile min, mcode, defer err
-  if err then throw err
-
+  await fs.writeFile min, mcode, esc defer()
   console.log "generating #{min}: success (#{mcode.length} chars)"
-  cb()
+  cb null
 
 # -------------
 
