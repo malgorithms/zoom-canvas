@@ -1,3 +1,3 @@
 
-exports.zoomCanvas = require('./zoom-canvas.iced').zoomCanvas
-exports.ezCanvas = require('./ez-canvas.iced').ezCanvas
+exports.zoomCanvas = require('./zoom-canvas').zoomCanvas
+exports.ezCanvas = require('./ez-canvas').ezCanvas
