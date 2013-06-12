@@ -88,6 +88,9 @@ module.exports=require('HLD9Zx');
       if (o.thickness != null) {
         this.ctx.lineWidth = o.thickness;
       }
+      if (o.color != null) {
+        this.ctx.strokeStyle = o.color;
+      }
       this.ctx.moveTo(o.start[0], o.start[1]);
       this.ctx.lineTo(o.end[0], o.end[1]);
       this.ctx.stroke();

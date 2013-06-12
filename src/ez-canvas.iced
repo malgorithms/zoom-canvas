@@ -53,6 +53,9 @@ class ezCanvas
     @zc.applyToCtx @ctx
     if o.thickness?
       @ctx.lineWidth = o.thickness
+    if o.color?
+      @ctx.strokeStyle = o.color
+
     @ctx.moveTo o.start[0], o.start[1]
     @ctx.lineTo o.end[0],   o.end[1]
     @ctx.stroke()
