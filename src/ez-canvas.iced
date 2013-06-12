@@ -4,7 +4,8 @@
 
 
 qtypes = 
-  LINE: 10
+  LINE:  10
+  LINES: 11
 
 class ezCanvas
 
@@ -23,7 +24,8 @@ class ezCanvas
     @queue  = []
     @ctx    = @canvas.getContext "2d"
 
-  line: (o) -> @queue.push [qtypes.LINE, o]
+  line: (o)  -> @queue.push [qtypes.LINE, o]
+  lines: (o) -> @queue.push [qtypes.LINES, o]
 
   clear: ->
     @ctx.clearRect 0, 0, @canvas.width, @canvas.height
@@ -45,19 +47,30 @@ class ezCanvas
     switch qt
       when qtypes.LINE
         @paint_queued_line o
+      when qtypes.LINE
+        @paint_queued_lines o
       else throw new Error "Dunno how to draw #{qt}"
 
   paint_queued_line: (o) ->
     @ctx.beginPath()
     @ctx.save()
     @zc.applyToCtx @ctx
-    if o.thickness?
-      @ctx.lineWidth = o.thickness
-    if o.color?
-      @ctx.strokeStyle = o.color
-
+    if o.thickness? then  @ctx.lineWidth   = o.thickness
+    if o.color?     then  @ctx.strokeStyle = o.color
     @ctx.moveTo o.start[0], o.start[1]
     @ctx.lineTo o.end[0],   o.end[1]
+    @ctx.stroke()
+    @ctx.restore()
+
+  paint_queued_lines: (o) ->
+    @ctx.beginPath()
+    @ctx.save()
+    @zc.applyToCtx @ctx
+    if o.thickness? then  @ctx.lineWidth   = o.thickness
+    if o.color?     then  @ctx.strokeStyle = o.color
+    @ctx.moveTo o.points[0][0], o.points[0][1]
+    for p in o.points[1...]
+      @ctx.lineTo p[0], p[1]
     @ctx.stroke()
     @ctx.restore()
 
