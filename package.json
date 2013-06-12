@@ -16,7 +16,8 @@
   "stitch"              : "*",
   "icsify"              : "*",
   "uglify-js"           : "*",
-  "through"             : "*"
+  "through"             : "*",
+  "iced-error"          : "*"
  },
  "repository": {
   "type": "git",
