@@ -29,4 +29,12 @@ class rect
         if r.ur.y > res.ur.y then res.ur.y = r.ur.y
       return res
 
+  @bounding_circle: (circle) ->
+    c = circle.center
+    r = circle.radius
+    return new rect(
+      new vec(c.x-r, c.y-r),
+      new vec(c.x+r, c.y+r)
+    )
+
 exports.rect = rect
