@@ -14,7 +14,7 @@ class rect
       if (i is 0) or v.x < res.ll.x then res.ll.x = v.x
       if (i is 0) or v.x > res.ur.x then res.ur.x = v.x
       if (i is 0) or v.y < res.ll.y then res.ll.y = v.y
-      if (i is 0) or v.y > res.ur.x then res.ur.y = v.y
+      if (i is 0) or v.y > res.ur.y then res.ur.y = v.y
     return res
 
   @bounding_rects: (rects_array) ->

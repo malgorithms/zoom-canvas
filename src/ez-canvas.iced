@@ -18,11 +18,12 @@ class ezCanvas
         step_dt_ms:    ms per step calculation
         canvas:        an actual html5 canvas to follow, so width, height updated automatically
     ###
-    @zc     = new zoomCanvas options
-    @bounds = null # will be a rect
-    @canvas = options.canvas
-    @queue  = []
-    @ctx    = @canvas.getContext "2d"
+    @zc                 = new zoomCanvas options
+    @bounds             = null # will be a rect
+    @canvas             = options.canvas
+    @queue              = []
+    @ctx                = @canvas.getContext "2d"
+    @is_affine_applied  = false
 
   line: (o)  -> @queue.push [qtypes.LINE, o]
   lines: (o) -> @queue.push [qtypes.LINES, o]
@@ -51,12 +52,16 @@ class ezCanvas
         @paint_queued_lines o
       else throw new Error "Dunno how to draw #{qt}"
 
+  set_ctx_from_cmd: (o) ->
+    if o.lineWidth?   then  @ctx.lineWidth   = o.lineWidth
+    if o.strokeStyle? then  @ctx.strokeStyle = o.strokeStyle
+    if o.lineCap?     then  @ctx.lineCap     = o.lineCap
+
   paint_queued_line: (o) ->
     @ctx.beginPath()
     @ctx.save()
     @zc.applyToCtx @ctx
-    if o.thickness? then  @ctx.lineWidth   = o.thickness
-    if o.color?     then  @ctx.strokeStyle = o.color
+    @set_ctx_from_cmd o
     @ctx.moveTo o.start[0], o.start[1]
     @ctx.lineTo o.end[0],   o.end[1]
     @ctx.stroke()
@@ -65,16 +70,21 @@ class ezCanvas
   paint_queued_lines: (o) ->
     @ctx.beginPath()
     @ctx.save()
-    @zc.applyToCtx @ctx
-    if o.thickness? then  @ctx.lineWidth   = o.thickness
-    if o.color?     then  @ctx.strokeStyle = o.color
+    @apply_affine_to_ctx()
+    @set_ctx_from_cmd o
     @ctx.moveTo o.points[0][0], o.points[0][1]
     for p in o.points[1...]
       @ctx.lineTo p[0], p[1]
     @ctx.stroke()
     @ctx.restore()
 
+  apply_affine_to_ctx: ->
+    if not @is_affine_applied
+      @is_affine_applied = true
+      @zc.applyToCtx @ctx
+
   recalc_bounds: ->
+    d = Date.now()
     rects = (@get_q_bounds q for q in @queue)
     if @bounds?
       rects.push @bounds # keep original bounds unless cleared
