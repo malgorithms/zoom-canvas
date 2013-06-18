@@ -4,35 +4,113 @@
     <script>
       var zoomCanvas  = require('zoomCanvas').zoomCanvas;
       var ezCanvas    = require('zoomCanvas').ezCanvas;
+      var ezStack     = require('zoomCanvas').ezStack;
     </script>
   </head>
   <body>
-    <canvas id="test_canvas" width="600" height="400" style="border:1px solid #ddd;"></canvas>
-    <div    id="debug"></div>
-    <script>
-      var ezc = new ezCanvas({
-          fill:           0.8,
-          spring_k:       500,
-          spring_damp:    100,
-          canvas:         document.getElementById("test_canvas"),
-          step_dt_ms:     10
-      })
-      loop = function() {
+    <table>
+      <tr>
+        <td valign="top">
+          <h1>ezCanvas</h1>
+            <canvas id="test_canvas" width="600" height="400" style="border:1px solid #ddd;"></canvas>
+            <div    id="debug"></div>
+            <script>
+              var ezc = new ezCanvas({
+                  fill:           0.8,
+                  spring_k:       500,
+                  spring_damp:    100,
+                  canvas:         document.getElementById("test_canvas"),
+                  step_dt_ms:     10
+              })
+              loop = function() {
 
-        ezc.clear();
-        for (var i = 0; i < 40; i++) {
-          ezc.line({
-            start:        [i+i*Math.sin(i*Date.now()/100000), 0],
-            end:          [0, 10-i-i*Math.sin(i*Date.now()/80000)],
-            color:        "red",
-            thickness:    0.01*(i+1)
-          });
-        }
-        ezc.paint();
+                ezc.clear();
+                for (var i = 0; i < 40; i++) {
+                  ezc.line({
+                    start:        [i+i*Math.sin(i*Date.now()/100000), 0],
+                    end:          [0, 10-i-i*Math.sin(i*Date.now()/80000)],
+                    strokeStyle:  "red",
+                    lineWidth:    0.01*(i+1)
+                  });
+                }
+                ezc.paint();
 
-        setTimeout(loop, 10);
-      }
-      loop();
-    </script>
+                setTimeout(loop, 10);
+              }
+              loop();
+            </script>
+        </td>
+        <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+        <td valign="top">
+          <h1>ezStack</h1>
+            <div style="position:relative;">
+              <canvas id="stack_canvas1" width="600" height="400" style="border:1px solid #ddd;position:absolute;"></canvas>
+              <canvas id="stack_canvas2" width="600" height="400" style="border:1px solid #ddd;position:absolute;"></canvas>
+              <canvas id="stack_canvas3" width="600" height="400" style="border:1px solid #ddd;position:absolute;"></canvas>
+            </div>
+            <div    id="debug"></div>
+            <script>
+              var stack = new ezStack({
+                  fill:           0.9,
+                  layers: [
+                    {canvas: document.getElementById("stack_canvas1") },
+                    {canvas: document.getElementById("stack_canvas2"), clippable: true},
+                    {canvas: document.getElementById("stack_canvas3"), clippable: true}
+                  ]
+              })
+
+              initial_draw = function() {
+                var count = 10000;
+                for (var i = 0; i < count; i++) {
+                  var f = i / count;
+                  stack.line({
+                    layer:        0,
+                    start:        [f, 0],
+                    end:          [0, 1-f],
+                    strokeStyle:  "red",
+                    lineWidth:    0.25 / count
+                  });
+                }
+                stack.paint();      
+              }
+
+              loop_stack = function() {
+
+                stack.clear_layer(1);
+
+                var count = 100;
+                for (var i = 0; i < count; i++) {
+                  var f = 1 - i / count;
+                  stack.line({
+                    layer:        1,
+                    start:        [f, 0],
+                    end:          [0, 1-f],
+                    strokeStyle:  "blue",
+                    lineWidth:    0.025 / count
+                  });
+                }
+                stack.paint();
+
+                stack.circle({
+                  layer: 2,
+                  center: [Math.random(), Math.random()],
+                  radius: Math.random() / 5,
+                  fillStyle: "rgba(255, 0, 0, 0.5)",
+                  lineWidth: 0.01,
+                  strokeStyle: "rgba(255, 0, 0, 0.75)"
+                })
+
+                if (Math.random() < 0.1) {
+                  stack.clear_layer(2)
+                }
+
+                setTimeout(loop_stack, 10);
+              }
+              initial_draw();
+              loop_stack();
+            </script>
+        </td>
+     </tr>
+   </table>
   </body>
 </html>

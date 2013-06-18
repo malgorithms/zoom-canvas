@@ -3,7 +3,7 @@
 {vec}             = require './vec'
 
 
-qtypes = 
+draw_code = exports.draw_code =  
   LINE:   10
   LINES:  11
   CIRCLE: 12
@@ -26,21 +26,34 @@ class ezCanvas
     @ctx                = @canvas.getContext "2d"
     @is_affine_applied  = false
 
-  line: (o)   -> @queue.push [qtypes.LINE, o]
-  lines: (o)  -> @queue.push [qtypes.LINES, o]
-  circle: (o) -> @queue.push [qtypes.CIRCLE, o]
+  line:   (o) -> @queue.push [draw_code.LINE,   o]
+  lines:  (o) -> @queue.push [draw_code.LINES,  o]
+  circle: (o) -> @queue.push [draw_code.CIRCLE, o]
 
   clear: ->
-    @ctx.clearRect 0, 0, @canvas.width, @canvas.height
-    @bounds = null
-    @queue  = []
+    @clear_canvas()
+    @bounds     = null
+    @queue      = []
 
-  paint: ->
-    @recalc_bounds()
-    @zc.setObjectBounds @bounds.ll.x, @bounds.ll.y, @bounds.ur.x, @bounds.ur.y
+  clear_canvas: ->
+    ###
+    does not delete its queue
+    ###
+    @ctx.clearRect 0, 0, @canvas.width, @canvas.height
+
+  paint: (opts) ->
+    opts = opts or {}
+    if (b = opts.bounds)
+      @zc.setObjectBounds b.ll.x, b.ll.y, b.ur.x, b.ur.y
+    else
+      @recalc_bounds()
+      @zc.setObjectBounds @bounds.ll.x, @bounds.ll.y, @bounds.ur.x, @bounds.ur.y
+
     @zc.step Date.now()
     @paint_queued_item q for q in @queue
-    @queue = []
+
+  world_pair_to_canvas_pair: (p) -> @zc.worldPairToCanvasPair p
+  canvas_pair_to_world_pair: (p) -> @zc.canvasPairToWorldPair p
 
   # ----------- PRIVATE -------------------------------
 
@@ -48,11 +61,11 @@ class ezCanvas
     qt = q_item[0]
     o  = q_item[1]
     switch qt
-      when qtypes.LINE
+      when draw_code.LINE
         @paint_queued_line o
-      when qtypes.LINE
+      when draw_code.LINE
         @paint_queued_lines o
-      when qtypes.CIRCLE
+      when draw_code.CIRCLE
         @paint_queued_circle o
       else throw new Error "Dunno how to draw #{qt}"
 
@@ -87,10 +100,12 @@ class ezCanvas
     @ctx.save()
     @ctx.beginPath()
     @zc.applyToCtx @ctx
-    @set_ctx_from_cmd o
+    @set_ctx_from_cmd o    
     @ctx.arc o.center[0], o.center[1], o.radius, 0, 2*Math.PI, false
-    @ctx.fill()
-    @ctx.stroke()
+    if o.lineWidth? or o.strokeStyle?
+      @ctx.stroke()
+    if o.fillStyle?
+      @ctx.fill()
     @ctx.restore()    
 
   apply_affine_to_ctx: ->
@@ -100,22 +115,22 @@ class ezCanvas
 
   recalc_bounds: ->
     d = Date.now()
-    rects = (@get_q_bounds q for q in @queue when not q[1].clippable)
+    rects = (ezCanvas.get_queued_item_bounds q[0], q[1] for q in @queue when not q[1].clippable)
     if @bounds?
       rects.push @bounds # keep original bounds unless cleared
     @bounds = rect.bounding_rects rects
 
-  get_q_bounds: (q_item) ->
-    qt = q_item[0]
-    o  = q_item[1]
-    switch qt
-      when qtypes.LINE
+  # class members
+
+  @get_queued_item_bounds: (dc, o) ->
+    switch dc
+      when draw_code.LINE
         return rect.bounding_vecs [new vec(o.start[0], o.start[1]), new vec(o.end[0], o.end[1])]
-      when qtypes.CIRCLE
+      when draw_code.CIRCLE
         return rect.bounding_circle { 
           center: new vec o.center[0], o.center[1]
           radius: o.radius
         }
-      else throw new Error "Unknown q type: #{qt}"
+      else throw new Error "Unknown q type: #{dc}"
 
 exports.ezCanvas = ezCanvas
